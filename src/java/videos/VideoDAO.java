@@ -7,11 +7,16 @@ package videos;
 
 import common.DatabaseConnection;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class VideoDAO {
@@ -26,7 +31,7 @@ public class VideoDAO {
     {
         DatabaseConnection.disconnect();
     }
-        
+
     public static void register(Video video) throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException{ 
         try{
             init();
@@ -36,7 +41,9 @@ public class VideoDAO {
             stmt.setString(1, video.getTitulo());
             stmt.setString(2, video.getAutor());
             stmt.setDate(3, new java.sql.Date(video.getFechaCreacion().getTime()));
-            stmt.setTime(4, video.getDuracion());
+
+            LocalDateTime duracionLocal = new Timestamp(video.getDuracion()).toLocalDateTime();
+            stmt.setTime(4, new Time(duracionLocal.getHour(), duracionLocal.getMinute(), duracionLocal.getSecond()));
             stmt.setInt(5, video.getReproducciones());
             stmt.setString(6, video.getDescripcion());
             stmt.setString(7, video.getFormato());
@@ -49,40 +56,50 @@ public class VideoDAO {
         }
     }  
     
+    private static List<Video> listFromResults(ResultSet resultados) throws SQLException{
+        List<Video> videos = new ArrayList<Video>();
+        Date today = new Date();
+        today.setTime(0);
+        Video video = null;
+        
+        while(resultados.next()){
+            video = new Video(resultados.getObject("TITULO", String.class),
+                            resultados.getObject("AUTOR", String.class),
+                            resultados.getDate("FECHACREACION"),
+                            today.getTime() + resultados.getTime("DURACION").getTime(),
+                            resultados.getObject("REPRODUCCIONES", Integer.class),
+                            resultados.getObject("DESCRIPCION", String.class),
+                            resultados.getObject("FORMATO", String.class));
+
+            videos.add(video);
+        }    
+        
+        if(videos.isEmpty()){
+            videos = null;
+        }
+        
+        return videos;
+    }
+
     public static List<Video> retrieve(Integer offset, Integer numRecords) throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException{
         // TODO : falta per aplicar l'offset i el numRecords 
         List<Video> videos = new ArrayList<Video>();
         
         try{
-            Video video = null;
             String statement = "select titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato from videos";
             init();
             stmt = connection.prepareStatement(statement);
             ResultSet results = stmt.executeQuery();
 
-            while(results.next()){
-                video = new Video(results.getObject("TITULO", String.class),
-                                results.getObject("AUTOR", String.class),
-                                results.getDate("FECHACREACION"),
-                                results.getTime("DURACION"),
-                                results.getObject("REPRODUCCIONES", Integer.class),
-                                results.getObject("DESCRIPCION", String.class),
-                                results.getObject("FORMATO", String.class));
-
-                videos.add(video);
-            }
-
+            videos = listFromResults(results);
+            
             results.close();
             stmt.close();
         }
         finally{
             disconnect();
         }
-        
-        if(videos.isEmpty()){
-            videos = null;
-        }
-        
+
         return videos;
     }
     
@@ -114,68 +131,38 @@ public class VideoDAO {
         List<Video> videos = new ArrayList<Video>();
         
         try{
-            Video video = null;
             String statement = "select titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato from videos where titulo like '%" + searchText +"%'";
             init();
             stmt = connection.prepareStatement(statement);
             ResultSet results = stmt.executeQuery();
 
-            while(results.next()){
-                video = new Video(results.getObject("TITULO", String.class),
-                                results.getObject("AUTOR", String.class),
-                                results.getDate("FECHACREACION"),
-                                results.getTime("DURACION"),
-                                results.getObject("REPRODUCCIONES", Integer.class),
-                                results.getObject("DESCRIPCION", String.class),
-                                results.getObject("FORMATO", String.class));
-
-                videos.add(video);
-            }
-
+            videos = listFromResults(results);
+            
             results.close();
             stmt.close();
         }
         finally{
             disconnect();
         }
-        
-        if(videos.isEmpty()){
-            videos = null;
-        }
-        
+
         return videos;
     }
     public static List<Video> searchByAutor(String searchText) throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException{
         List<Video> videos = new ArrayList<Video>();
         
         try{
-            Video video = null;
             String statement = "select titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato from videos where autor like '%" + searchText +"%'";
             init();
             stmt = connection.prepareStatement(statement);
             ResultSet results = stmt.executeQuery();
 
-            while(results.next()){
-                video = new Video(results.getObject("TITULO", String.class),
-                                results.getObject("AUTOR", String.class),
-                                results.getDate("FECHACREACION"),
-                                results.getTime("DURACION"),
-                                results.getObject("REPRODUCCIONES", Integer.class),
-                                results.getObject("DESCRIPCION", String.class),
-                                results.getObject("FORMATO", String.class));
-
-                videos.add(video);
-            }
-
+            videos = listFromResults(results);
+            
             results.close();
             stmt.close();
         }
         finally{
             disconnect();
-        }
-        
-        if(videos.isEmpty()){
-            videos = null;
         }
         
         return videos;
@@ -184,8 +171,6 @@ public class VideoDAO {
         List<Video> videos = new ArrayList<Video>();
         
         try{
-            Video video = null;
-            
             if(searchYear < 0) throw new Exception("EL número es negativo");
             
             String statement = "select titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato from videos where year(fechaCreacion) = " + searchYear;
@@ -193,27 +178,13 @@ public class VideoDAO {
             stmt = connection.prepareStatement(statement);
             ResultSet results = stmt.executeQuery();
 
-            while(results.next()){
-                video = new Video(results.getObject("TITULO", String.class),
-                                results.getObject("AUTOR", String.class),
-                                results.getDate("FECHACREACION"),
-                                results.getTime("DURACION"),
-                                results.getObject("REPRODUCCIONES", Integer.class),
-                                results.getObject("DESCRIPCION", String.class),
-                                results.getObject("FORMATO", String.class));
-
-                videos.add(video);
-            }
-
+            videos = listFromResults(results);
+            
             results.close();
             stmt.close();
         }
         finally{
             disconnect();
-        }
-        
-        if(videos.isEmpty()){
-            videos = null;
         }
         
         return videos;

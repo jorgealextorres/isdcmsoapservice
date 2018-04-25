@@ -3,7 +3,7 @@ package videos;
 import common.DatabaseConnection;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Time;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -90,7 +90,6 @@ public class servletRegistroVid extends HttpServlet {
 
     protected void processRegister(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
         Video video;
         
         try {
@@ -108,10 +107,11 @@ public class servletRegistroVid extends HttpServlet {
             {
                 DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_TIME;
                 LocalTime duracionLocal = LocalTime.parse(request.getParameter("duracion"), dateTimeFormatter);
+                Timestamp duracion = Timestamp.valueOf(duracionLocal.toString());
                 video = new Video(titulo,
                                     request.getParameter("autor"),
                                     new SimpleDateFormat("yyyy-MM-dd").parse(request.getParameter("fechaCreacion")),
-                                    new Time(duracionLocal.getHour(), duracionLocal.getMinute(), duracionLocal.getSecond()),
+                                    duracion.getTime(),
                                     new Integer(request.getParameter("reproducciones")),
                                     request.getParameter("descripcion"),
                                     request.getParameter("formato"));
@@ -137,6 +137,7 @@ public class servletRegistroVid extends HttpServlet {
             request.setAttribute("redirect", "../servletRegistroVid/listado");
             request.getRequestDispatcher("/message.jsp").forward(request, response);
         }
+
     }
     
     private boolean isNullEmptyOrWhiteSpace(String str)
