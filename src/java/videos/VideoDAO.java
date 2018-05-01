@@ -31,12 +31,12 @@ public class VideoDAO {
     {
         DatabaseConnection.disconnect();
     }
-
+/*
     public static void register(Video video) throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException{ 
         try{
             init();
-            String sentence = "insert into videos(titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato) " +
-                        "values (?,?,?,?,?,?,?)";
+            String sentence = "insert into videos(titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato, url) " +
+                        "values (?,?,?,?,?,?,?,?)";
             stmt = connection.prepareStatement(sentence);
             stmt.setString(1, video.getTitulo());
             stmt.setString(2, video.getAutor());
@@ -47,6 +47,7 @@ public class VideoDAO {
             stmt.setInt(5, video.getReproducciones());
             stmt.setString(6, video.getDescripcion());
             stmt.setString(7, video.getFormato());
+            stmt.setString(8, video.getUrl());
             stmt.executeUpdate();
             stmt.close();
             connection.commit();
@@ -55,21 +56,34 @@ public class VideoDAO {
             disconnect();
         }
     }  
-    
+*/    
     private static List<Video> listFromResults(ResultSet resultados) throws SQLException{
         List<Video> videos = new ArrayList<Video>();
         Date today = new Date();
         today.setTime(0);
         Video video = null;
         
+        
         while(resultados.next()){
-            video = new Video(resultados.getObject("TITULO", String.class),
+            
+            String url;
+            try {
+                url = resultados.getObject("URL", String.class);
+            }
+            catch (Exception ex) {
+                //url does not exists
+                url = "";
+            }
+            
+            video = new Video(resultados.getInt("ID"),
+                            resultados.getObject("TITULO", String.class),
                             resultados.getObject("AUTOR", String.class),
                             resultados.getDate("FECHACREACION"),
                             today.getTime() + resultados.getTime("DURACION").getTime(),
                             resultados.getObject("REPRODUCCIONES", Integer.class),
                             resultados.getObject("DESCRIPCION", String.class),
-                            resultados.getObject("FORMATO", String.class));
+                            resultados.getObject("FORMATO", String.class),
+                            url);
 
             videos.add(video);
         }    
@@ -80,13 +94,13 @@ public class VideoDAO {
         
         return videos;
     }
-
+/*
     public static List<Video> retrieve(Integer offset, Integer numRecords) throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException{
         // TODO : falta per aplicar l'offset i el numRecords 
         List<Video> videos = new ArrayList<Video>();
         
         try{
-            String statement = "select titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato from videos";
+            String statement = "select id, titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato from videos";
             init();
             stmt = connection.prepareStatement(statement);
             ResultSet results = stmt.executeQuery();
@@ -101,6 +115,31 @@ public class VideoDAO {
         }
 
         return videos;
+    }
+
+    
+    
+    
+    public static Video retrieveVideoWithUrl(String titulo) throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException{
+        Video video = null;   
+        try{
+            String statement = "select id, titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato, url from videos where titulo = '" + titulo + "';";           
+            init();
+            stmt = connection.prepareStatement(statement);
+            ResultSet results = stmt.executeQuery();
+
+            List<Video> videos = listFromResults(results);
+            
+            if (videos != null && videos.size() > 0) video = videos.get(0);
+            
+            results.close();
+            stmt.close();
+        }
+        finally{
+            disconnect();
+        }
+
+        return video;
     }
     
     public static boolean videoExists(String titulo) throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException{
@@ -126,12 +165,12 @@ public class VideoDAO {
         
         return exists;
     }
-    
+    */
     public static List<Video> searchByTitle(String searchText) throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException{
         List<Video> videos = new ArrayList<Video>();
         
         try{
-            String statement = "select titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato from videos where titulo like '%" + searchText +"%'";
+            String statement = "select id, titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato, url from videos where titulo like '%" + searchText +"%'";
             init();
             stmt = connection.prepareStatement(statement);
             ResultSet results = stmt.executeQuery();
@@ -151,7 +190,7 @@ public class VideoDAO {
         List<Video> videos = new ArrayList<Video>();
         
         try{
-            String statement = "select titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato from videos where autor like '%" + searchText +"%'";
+            String statement = "select id, titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato, url from videos where autor like '%" + searchText +"%'";
             init();
             stmt = connection.prepareStatement(statement);
             ResultSet results = stmt.executeQuery();
@@ -173,7 +212,7 @@ public class VideoDAO {
         try{
             if(searchYear < 0) throw new Exception("EL número es negativo");
             
-            String statement = "select titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato from videos where year(fechaCreacion) = " + searchYear;
+            String statement = "select id, titulo, autor, fechaCreacion, duracion, reproducciones, descripcion, formato, url from videos where year(fechaCreacion) = " + searchYear;
             init();
             stmt = connection.prepareStatement(statement);
             ResultSet results = stmt.executeQuery();
@@ -189,4 +228,21 @@ public class VideoDAO {
         
         return videos;
     }
+    /*
+    public static void incrementarNumeroReproducciones(Integer id) throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException{
+        try{
+            init();
+            String sentence = "update videos set reproducciones = reproducciones + 1 where id = ?";
+            stmt = connection.prepareStatement(sentence);
+            stmt.setLong(1, id);
+            
+            stmt.executeUpdate();
+            stmt.close();
+            connection.commit();
+        }
+        finally{
+            disconnect();
+        }
+    }
+*/
 }

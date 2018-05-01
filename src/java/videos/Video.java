@@ -3,6 +3,7 @@ package videos;
 import java.util.Date;
 
 public class Video {
+    private Integer id;
     private String titulo;
     private String autor;
     private Date fechaCreacion;
@@ -10,8 +11,10 @@ public class Video {
     private Integer reproducciones;
     private String descripcion;
     private String formato;
-
-    public Video(String titulo, String autor, Date fechaCreacion, Long duracion, Integer reproducciones, String descripcion, String formato) {
+    private String url;
+    
+    public Video(Integer id, String titulo, String autor, Date fechaCreacion, Long duracion, Integer reproducciones, String descripcion, String formato, String url) {
+        this.id = id;
         this.titulo = titulo;
         this.autor = autor;
         this.fechaCreacion = fechaCreacion;
@@ -19,6 +22,15 @@ public class Video {
         this.reproducciones = reproducciones;
         this.descripcion = descripcion;
         this.formato = formato;
+        this.url = url;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getTitulo() {
@@ -75,5 +87,13 @@ public class Video {
 
     public void setFormato(String formato) {
         this.formato = formato;
+    }
+    
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 }
